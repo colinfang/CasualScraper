@@ -1,0 +1,27 @@
+[MESSAGES CONTROL]
+
+
+disable=
+    # Convention
+    missing-docstring,
+    line-too-long,
+    invalid-name,
+    bad-continuation,
+    bad-whitespace,
+
+    # Refactor
+    trailing-newlines,
+    no-else-return,
+    too-many-locals,
+    too-many-arguments,
+    too-many-return-statements,
+    too-many-branches,
+
+    # Error
+    no-member,
+    import-error,
+
+    # Warning
+    logging-format-interpolation,
+    broad-except,
+    logging-fstring-interpolation

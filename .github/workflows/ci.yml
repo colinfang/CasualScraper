@@ -1,0 +1,22 @@
+name: CI
+on:
+  watch:
+    types: [started]
+  schedule:
+    - cron: '2 * * * *'
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'watch' || github.actor == github.event.repository.owner.login
+    steps:
+      - run: echo ${{ github.event_name }}
+      - uses: actions/checkout@v2
+      - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+      - run: make build_with_github
+      - env:
+          API_KEY: ${{ secrets.API_KEY }}
+          EMAILS: ${{ secrets.EMAILS }}
+          MAILGUN: ${{ secrets.MAILGUN }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: make run

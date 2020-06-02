@@ -1,0 +1,26 @@
+{
+	"name": "CasualScraper",
+	"image": "casual_scraper",
+
+	"settings": {
+		// python:3 image
+		"python.pythonPath": "python",
+		"python.linting.mypyEnabled": true,
+		"python.linting.mypyArgs": [
+			"--show-error-codes",
+			"--check-untyped-defs",
+			"--warn-unused-configs",
+			"--disallow-subclassing-any",
+			"--no-implicit-optional",
+			"--warn-redundant-casts",
+			"--warn-unused-ignores",
+			"--warn-return-any",
+			"--warn-unreachable",
+			"--strict-equality",
+		],
+	},
+
+	"extensions": [
+		"ms-python.python"
+	]
+}

@@ -1,0 +1,10 @@
+# PyCharm
+.idea/
+*.pyc
+*~
+*.swp
+# CMake
+build*/
+cmake-build*/
+.mypy_cache/
+.vscode/
