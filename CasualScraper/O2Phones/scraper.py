@@ -1,6 +1,7 @@
-from typing import NamedTuple, List, Dict, DefaultDict, Tuple
+from typing import NamedTuple, List, Dict, DefaultDict, Tuple, Optional
 
 import json
+import textwrap
 import functools
 from datetime import datetime, timezone
 from urllib.parse import unquote
@@ -153,6 +154,42 @@ def rewrite_deals_to_db(deals: Dict[Tuple, ProductVariant], collection) -> None:
     collection.drop()
     collection.insert_many([deal._asdict() for deal in deals.values()])
 
+def build_table_header() -> str:
+    xs = [
+        'brand',
+        'model',
+        'spec',
+        'condition',
+        'cash price',
+        'previous price',
+        'ref price',
+        'percentage',
+        'link'
+    ]
+    xs = [f'<th>{x}</th>' for x in xs]
+    th = textwrap.indent('\n'.join(xs), '    ')
+    return f'<tr>\n{th}\n</tr>'
+
+def build_table_row(x: ProductVariant, ref_price: int, previous_price: Optional[int]) -> str:
+    link = f'https://www.o2.co.uk{x.link}'
+    xs = [
+        x.brand,
+        x.model,
+        x.spec,
+        x.condition,
+        f'£{x.cash_price / 100:.2f}',
+        f'£{previous_price / 100:2f}' if previous_price else '',
+        f'£{ref_price / 100:.2f}',
+        f'{x.cash_price / ref_price:.2%}',
+        f'<a href="{link}">link</a>',
+    ]
+    xs = [f'<td>{x}</td>' for x in xs]
+    td = textwrap.indent('\n'.join(xs), '    ')
+    return f'<tr>\n{td}\n</tr>'
+
+def build_table(header: str, body: List[str]) -> str:
+    s = textwrap.indent(header + '\n' + '\n'.join(body), '    ')
+    return f'<table style="border-collapse: collapse;" border="1">\n{s}\n</table>\n'
 
 
 def report_best_value(collection, product_variants: List[ProductVariant], n: int) -> str:
@@ -177,7 +214,7 @@ def report_best_value(collection, product_variants: List[ProductVariant], n: int
 
     previous_deals = get_previous_deals_from_db(collection)
 
-    lines = [f'Update from Best {n} Deals']
+    rows = []
     i = 0
     deals = {}
     for ref_price, x in xs:
@@ -199,20 +236,18 @@ def report_best_value(collection, product_variants: List[ProductVariant], n: int
                 continue
             else:
                 # Price update
-                line = f'-- {x.brand:<10} {x.model:<20} {x.spec:<20} {x.condition:<8} £{x.cash_price / 100:<6g} (£{previous_price / 100:<6g}) £{ref_price / 100:<6g} {x.cash_price / ref_price:.2%}    -- {x.link}'
-                lines.append(line)
+                rows.append(build_table_row(x, ref_price, previous_price))
                 continue
         else:
             # New deal
-            line = f'-- {x.brand:<10} {x.model:<20} {x.spec:<20} {x.condition:<8} £{x.cash_price / 100:<6g} £{ref_price / 100:<6g} {x.cash_price / ref_price:.2%}    -- {x.link}'
-            lines.append(line)
+            rows.append(build_table_row(x, ref_price, None))
             continue
     # I don't care if previous_deals have gone disappeared.
 
-    if len(lines) > 1:
-        # It always has 1 line of header.
+    if rows:
         rewrite_deals_to_db(deals, collection)
-        return '\n'.join(lines)
+        s = build_table(build_table_header(), rows)
+        return f'<p>Update from Best {n} Deals</p>\n{s}'
     else:
         return ''
 
@@ -223,7 +258,7 @@ def pipeline(db) -> str:
 
     best_value = report_best_value(db.o2_phones, product_variants, 10)
     if best_value:
-        return f'Sent at {datetime.now(timezone.utc)}\n\n{best_value}'
+        return f'<html>\n<p>Sent at {datetime.now(timezone.utc)}</p>\n\n{best_value}\n</html>'
     else:
         return ''
 

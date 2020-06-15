@@ -11,14 +11,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 def send_email(
-        *, subject: str, text: str, emails: List[str],
+        *, subject: str, html: str, emails: List[str],
         mailgun_url: str, api_key: str
     ):
     data={
         'from': 'me@foo.bar',
         'to': emails,
         'subject': subject,
-        'text': text
+        'html': html
     }
     LOGGER.info('Sending email')
     r = requests.post(mailgun_url, auth=('api', api_key), data=data)
@@ -42,7 +42,7 @@ def main():
     if o2phone:
         r = send_email(
             subject='O2 Phone Deals',
-            text=o2phone,
+            html=o2phone,
             emails=os.environ['EMAILS'].split(' '),
             mailgun_url=os.environ['MAILGUN'],
             api_key=os.environ['API_KEY'],
